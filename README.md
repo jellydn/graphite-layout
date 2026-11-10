@@ -10,6 +10,9 @@ See the [Windows and macOS installation guide](INSTALL.md) for package status,
 setup, activation, testing, and safe removal. Keep your current layout available
 until you have tested Graphite.
 
+For open-source tools, see [Kanata and Karabiner setup](REMAPPERS.md), with
+Windows/macOS comparisons and example configurations.
+
 ## The Layout
 
 <img width="977" alt="Screenshot 2023-04-04 at 8 56 41 PM" src="https://user-images.githubusercontent.com/630055/229977002-af109956-c56b-406f-9f07-6e9937412ece.png">

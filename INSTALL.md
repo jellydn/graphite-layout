@@ -11,6 +11,11 @@ Use this guide for the standard Graphite layout, including its punctuation.
 | macOS | Install the bundled [`macos/Graphite.zip`](macos/Graphite.zip) for your user account. | Included in this repository. |
 | Windows | Install the community MSKLC package from [upstream PR #10](https://github.com/rdavison/graphite-layout/pull/10). | Optional external package; the PR was open and unmerged when checked. No Windows package is included in this repository. |
 
+For open-source remapper alternatives, see [Kanata and Karabiner setup](REMAPPERS.md).
+Kanata supports Windows and macOS; Karabiner-Elements is macOS-only. Example
+configurations are included. Use a US/QWERTY input source with a remapper,
+**not** a native Graphite input source at the same time.
+
 **Verification boundary:** Sources and archive contents were checked on
 10 November 2026. The macOS base and Shift mappings and the Windows `.klc` source
 were inspected. Installation, activation, shortcuts, login, and removal were
@@ -217,6 +222,7 @@ separately verified how your OS handles input at each login or unlock screen.
   and [MSKLC download and requirements](https://www.microsoft.com/en-us/download/details.aspx?id=102134).
   These verify Windows controls and tool capabilities, not this community package.
 
-This guide does not cover third-party remappers, keyboard firmware flashing, or
-custom layout generation. It does not claim medical benefits or guaranteed typing
-speed. No layout was installed on a user's device to prepare this guide.
+See [the remapper guide](REMAPPERS.md) for third-party tools. This guide does not
+cover keyboard firmware flashing or custom layout generation. It does not claim
+medical benefits or guaranteed typing speed. No layout was installed on a user's
+device to prepare this guide.

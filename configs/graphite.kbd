@@ -1,0 +1,17 @@
+;; Kanata v1.12.0. Use a US/QWERTY OS input source, not native Graphite.
+;; Shortcuts follow Graphite positions. See REMAPPERS.md before use.
+(defcfg process-unmapped-keys no)
+
+(defsrc
+  q w e r t y u i o p lbrc rbrc
+  a s d f g h j k l scln apos
+  z x c v b n m comm . /
+  min eql bksl lsft rsft
+)
+
+(deflayer graphite
+  b l d w z (fork apos S-min (lsft rsft)) f o u j scln eql
+  n r t s g y h a e i (fork comm S-/ (lsft rsft))
+  q x m c v k p . (fork min S-apos (lsft rsft)) (fork / S-comm (lsft rsft))
+  lbrc rbrc bksl lsft rsft
+)
