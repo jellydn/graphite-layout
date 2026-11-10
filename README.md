@@ -4,6 +4,15 @@
 
 Graphite is a highly optimized, well balanced, general purpose keyboard layout designed to accommodate the real world needs of typists looking for a great “out-of-the-box” experience. Its design incorporates many contemporary theories about layouts to find a balance between comfort and speed. In addition to its impressive performance in metrics, Graphite has also been extensively tested and validated through real-world usage. 
 
+## Installation
+
+See the [Windows and macOS installation guide](INSTALL.md) for package status,
+setup, activation, testing, and safe removal. Keep your current layout available
+until you have tested Graphite.
+
+For open-source tools, see [Kanata, KMonad, and Karabiner setup](REMAPPERS.md), with
+Windows/macOS comparisons and example configurations.
+
 ## The Layout
 
 <img width="977" alt="Screenshot 2023-04-04 at 8 56 41 PM" src="https://user-images.githubusercontent.com/630055/229977002-af109956-c56b-406f-9f07-6e9937412ece.png">

@@ -1,0 +1,48 @@
+;; KMonad release 0.4.5. Use US/QWERTY input, not native Graphite.
+;; Read REMAPPERS.md before use. Shortcuts follow Graphite positions.
+(defcfg
+  ;; Windows. On macOS, comment these two lines and enable the Mac pair.
+  input (low-level-hook)
+  output (send-event-sink)
+  ;; macOS: requires a dext build and VirtualHIDDevice 6.8.0 + daemon.
+  ;; input (iokit-name)
+  ;; output (kext)
+  fallthrough true
+  allow-cmd false
+)
+
+;; Shared mapping: do not change this section when switching OS.
+(defsrc
+  q w e r t y u i o p lbrc rbrc
+  a s d f g h j k l scln apos
+  z x c v b n m comm . /
+  min eql bksl lsft rsft
+)
+
+;; Separate layers keep the remaining Shift active when the other is released.
+(defalias
+  left-shift (around lsft (layer-toggle shift-left))
+  right-shift (around rsft (layer-toggle shift-right))
+)
+
+(deflayer graphite
+  b l d w z apos f o u j scln eql
+  n r t s g y h a e i comm
+  q x m c v k p . min /
+  lbrc rbrc bksl @left-shift @right-shift
+)
+
+;; Shift is already held: US Shift+min, /, apos, comm produce _, ?, ", <.
+(deflayer shift-left
+  _ _ _ _ _ min _ _ _ _ _ _
+  _ _ _ _ _ _ _ _ _ _ /
+  _ _ _ _ _ _ _ _ apos comm
+  _ _ _ _ _
+)
+
+(deflayer shift-right
+  _ _ _ _ _ min _ _ _ _ _ _
+  _ _ _ _ _ _ _ _ _ _ /
+  _ _ _ _ _ _ _ _ apos comm
+  _ _ _ _ _
+)
