@@ -24,7 +24,11 @@ Current stable releases checked: [Kanata **1.12.0**](https://github.com/jtroo/ka
 [AutoHotkey **2.0.31**](https://github.com/AutoHotkey/AutoHotkey/releases/tag/v2.0.31). Check each release's requirements
 before upgrading. Older macOS releases may require an older Karabiner version;
 the current download page lists 16.3.0 for macOS 13 and later, on Intel and Apple
-Silicon. Kanata's 1.12.0 macOS setup guide lists macOS 11 or newer.
+Silicon. Kanata's 1.12.0 guide says macOS 11+, but its required 6.2.0 driver's
+[own support list](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/tree/v6.2.0#supported-systems)
+is narrower: macOS 13–15 on Intel/Apple Silicon, and macOS 26 on Apple Silicon
+(Intel is expected but untested by that author). This pinned Kanata setup is not
+verified for macOS 11/12 or 27; use a documented compatible alternative instead.
 
 ## Shared assumptions: read before enabling either example
 
@@ -107,10 +111,23 @@ only if you have a specific need. This guide does not install it or validate it.
    stable path. Make it executable with `chmod +x` if necessary. A compiler and
    Xcode tools are needed only for a source build, not these binaries.
 3. Install the driver package and approve its extension with an administrator.
-   Follow the pinned guide's activation steps and system settings prompts.
-   The standalone driver also needs its virtual HID **daemon running**; follow
-   that guide's temporary test setup before adding any startup job.
-   Driver installation alone does not start the daemon automatically.
+   Follow the driver manager's system settings prompts. The driver's
+   [own usage guide](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/tree/v6.2.0#usage)
+   gives this activation command:
+
+   ```sh copy Copy Driver Activation Command
+   sudo /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
+   ```
+
+   The standalone driver also needs its virtual HID **daemon running**. In a
+   separate terminal, start it in the foreground and keep that terminal open:
+
+   ```sh copy Copy Driver Daemon Command
+   sudo '/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon'
+   ```
+
+   Driver installation alone does not start the daemon automatically. Do not add
+   a startup job for the first test.
 4. Grant **Input Monitoring** and **Accessibility** as directed in the pinned
    guide, under **System Settings > Privacy & Security**. Check the actual binary
    and responsible terminal process if macOS prompts for it. Do not disable SIP
@@ -142,7 +159,8 @@ This guide adds no startup job. If you added one separately, disable it first or
 it can restart Kanata. On Windows, remove only your Kanata startup entry and
 binary/config when no longer needed; this winIOv2 method installed no extra driver.
 On macOS, follow the pinned guide's uninstall section for **only the jobs and
-driver you installed**. Do not remove a virtual HID driver used by another app.
+driver you installed**, and the [driver's own uninstaller](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/tree/v6.2.0#uninstallation)
+for full standalone driver removal. Do not remove a virtual HID driver used by another app.
 Restore saved configs to roll back a config edit, rerun `--check`, and restart.
 Revoking privacy permissions is cleanup, not a substitute for stopping a process.
 
