@@ -10,7 +10,7 @@ See the [Windows and macOS installation guide](INSTALL.md) for package status,
 setup, activation, testing, and safe removal. Keep your current layout available
 until you have tested Graphite.
 
-For open-source tools, see [Kanata and Karabiner setup](REMAPPERS.md), with
+For open-source tools, see [Kanata, KMonad, and Karabiner setup](REMAPPERS.md), with
 Windows/macOS comparisons and example configurations.
 
 ## The Layout

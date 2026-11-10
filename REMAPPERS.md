@@ -9,12 +9,14 @@ mean **Kanata**. Sources and stable releases were checked on 10 November 2026.
 | --- | --- | --- | --- |
 | [Kanata](https://github.com/jtroo/kanata) (LGPL-3.0) | Windows, macOS, Linux | One Graphite configuration across systems; layers later if needed. | Windows winIOv2 needs no extra kernel driver. macOS needs a compatible Karabiner virtual HID driver, a daemon, root, and privacy permissions. |
 | [Karabiner-Elements](https://github.com/pqrs-org/Karabiner-Elements) (public domain) | **macOS only** | A Mac settings UI, device selection, and editable JSON rules. | Needs background services, privacy permissions, and its virtual HID driver. Not a Windows tool. |
-| [KMonad](https://github.com/kmonad/kmonad) (MIT) | Windows, macOS, Linux | Users who already use KMonad layers. | Cross-platform, but input/output configuration and macOS driver setup are platform-specific. No example is supplied here. |
+| [KMonad](https://github.com/kmonad/kmonad) (MIT) | Windows, macOS, Linux | Users who already use KMonad layers. | Shared Graphite example below; platform-specific input/output. Windows release is x86-64. macOS needs a source build, driver 6.8.0, daemon, root, and permissions. |
 | [AutoHotkey v2](https://www.autohotkey.com/) (GPLv2) | **Windows only** | Users who already need Windows automation. | Script-based; Shift punctuation and shortcut policy need explicit handling. Its keyboard hooks can conflict with Kanata. No example is supplied here. |
 
 **Choose Kanata** for Windows or for a shared Windows/Mac configuration.
 Start with Windows **winIOv2**, not Interception. **Choose Karabiner-Elements**
-for a Mac-only setup if you prefer a UI. If you do not need layers or device rules,
+for a Mac-only setup if you prefer a UI. **Choose KMonad** if you already use its
+layers and can manage the platform-specific setup and Mac source build.
+If you do not need layers or device rules,
 the [bundled native macOS layout](INSTALL.md#macos-install-the-bundled-layout)
 avoids a running remapper. These are alternatives, not tools to stack together.
 
@@ -30,7 +32,7 @@ is narrower: macOS 13–15 on Intel/Apple Silicon, and macOS 26 on Apple Silicon
 (Intel is expected but untested by that author). This pinned Kanata setup is not
 verified for macOS 11/12 or 27; use a documented compatible alternative instead.
 
-## Shared assumptions: read before enabling either example
+## Shared assumptions: read before enabling an example
 
 - Select **US/QWERTY** in Windows or **U.S.** on macOS. Do not select the native
   Graphite layout while the remapper runs. These examples emit US key codes, not
@@ -50,9 +52,9 @@ verified for macOS 11/12 or 27; use a documented compatible alternative instead.
   held keys, key repeat, and overlapping key releases. Static checks below do not
   verify timing or OS Caps Lock behavior.
 - Stop other remappers, including AutoHotkey keyboard hooks and Karabiner rules
-  that affect these keys. Keep keyboard firmware in QWERTY. Do not run Kanata and
-  Karabiner-Elements remapping on the same device. Sharing a driver is not the
-  same as safe concurrent remapping, and driver versions can conflict.
+  that affect these keys. Keep keyboard firmware in QWERTY. Do not run more than
+  one remapper on the same device. Sharing a driver is not the same as safe
+  concurrent remapping, and driver versions can conflict.
 - Back up existing configurations. Keep a mouse and a known way to stop the tool.
   Save work and test in a local disposable document, not a password field.
   Do not enable startup services, scheduled tasks, or login-screen changes yet.
@@ -164,6 +166,155 @@ for full standalone driver removal. Do not remove a virtual HID driver used by a
 Restore saved configs to roll back a config edit, rerun `--check`, and restart.
 Revoking privacy permissions is cleanup, not a substitute for stopping a process.
 
+## KMonad 0.4.5: shared mapping, separate platform setup
+
+Example: [`configs/graphite-kmonad.kbd`](configs/graphite-kmonad.kbd).
+This is a **KMonad** file, not a Kanata file. Keep one active `input` and one
+active `output` in `defcfg`. The supplied pair is for Windows. On macOS, comment
+that pair and enable the two Mac lines. The `defsrc`, aliases, and three layers
+are shared; do not change them when switching OS. Unmapped keys pass through.
+Shell commands are disabled with `allow-cmd false`.
+
+The base layer is Graphite. Each Shift key holds its normal Shift modifier and
+its own transparent punctuation layer. The four exceptions are physical `y`
+→ `'` / `_`, quote → `,` / `?`, period → `-` / `"`, and slash → `/` / `<`.
+Letters still become uppercase, and Control/Command/Alt remain active. Shortcuts
+follow Graphite positions, not QWERTY. Separate Shift layers are necessary:
+KMonad deduplicates a layer held by two keys, so using one shared Shift layer
+would remove the punctuation override when only one Shift key is released.
+These are static semantics, not a guarantee about device timing or Caps Lock.
+
+### Windows: release binary and hooks
+
+1. Use Windows on Intel/AMD x86-64 for the supplied release executable. Download
+   `kmonad.exe` from [release 0.4.5](https://github.com/kmonad/kmonad/releases/tag/0.4.5).
+   Its PE header is x86-64; this release has **no native Windows ARM64 asset**.
+   ARM emulation is not tested here. The upstream build guide reports Windows 10;
+   it gives no current minimum-version guarantee or tested Windows 11 matrix.
+   Treat Windows 10/11 input delivery as untested, not certified compatibility.
+2. Compare the file's SHA-256 with the release asset digest. PowerShell can show it
+   with `Get-FileHash .\kmonad.exe -Algorithm SHA256`. No Haskell build tools or
+   Interception driver are needed for this binary. Keep the Windows `defcfg` pair:
+   `(low-level-hook)` and `(send-event-sink)`.
+3. Copy the example into that folder. Open PowerShell there and check it before
+   starting input capture:
+
+   ```powershell copy Copy KMonad Windows Check
+   .\kmonad.exe .\graphite-kmonad.kbd --dry-run
+   ```
+
+4. If the check succeeds, select US input and run in the foreground:
+
+   ```powershell copy Copy KMonad Windows Start
+   .\kmonad.exe .\graphite-kmonad.kbd
+   ```
+
+   Start without elevation in a normal editor. The hook captures **all
+   non-injected keyboard input**, not a selected keyboard. Do not assume a second
+   keyboard bypasses it. Stop AutoHotkey, Kanata, and other keyboard hooks first.
+   Elevated apps, secure screens, and restricted apps can reject injected input;
+   do not bypass UAC, anti-cheat, or security policy to make them work.
+5. Run the acceptance tests below. Windows repeat settings do not control
+   KMonad's repeat. If needed, `(send-event-sink 500 30)` sets delay to 500 ms
+   and repeat interval to 30 ms; the example leaves the upstream defaults.
+
+### macOS: source build and the matching DriverKit driver
+
+This release has **no official macOS binary asset**. Build KMonad locally for
+your Mac's architecture. Driver **6.8.0** lists macOS **13, 14, 15, and 26** on
+Intel and Apple Silicon. This is the driver's support list, not a tested KMonad
+build/runtime matrix. This recipe does not establish support for macOS 12 and
+earlier, macOS 27, or cross-architecture/Rosetta builds.
+
+1. Before installing anything, check for a shared driver. KMonad 0.4.5's
+   [release notes](https://github.com/kmonad/kmonad/releases/tag/0.4.5) and pinned
+   source require **VirtualHIDDevice 6.8.0**, not Kanata 1.12.0's **6.2.0**.
+   Do not overwrite an existing Kanata/Karabiner driver. Resolve the version
+   conflict or use the tool already installed. Older KMonad installation text
+   still names 5.0.0; use the release notes and pinned submodule for this version.
+2. Install Git, Xcode Command Line Tools (including the C/C++ compiler), and
+   Haskell Stack. If you use Homebrew, its package is `haskell-stack`. Use a
+   native terminal and native toolchain for Intel or Apple Silicon. Stack uses
+   the pinned resolver to obtain GHC and Haskell dependencies; allow disk space
+   and time for the first build. Clone the pinned tag, including its submodules:
+
+   ```sh copy Copy KMonad Source Checkout
+   git clone --branch 0.4.5 --recursive https://github.com/kmonad/kmonad.git
+   ```
+
+   In the new `kmonad` directory, build the **dext** client:
+
+   ```sh copy Copy KMonad Mac Build
+   stack install --flag kmonad:dext
+   ```
+
+   Stack normally copies the executable to `~/.local/bin/kmonad`. This builds
+   the client, not a signed driver. No Developer ID is needed when you use the
+   maintainer's signed driver package. Do not build or load the legacy kext for
+   this recipe. Despite the build flag, the config output is still **`(kext)`**;
+   `(dext)` is not a valid output token.
+3. Install the maintainer's signed **6.8.0** package from the
+   [driver release](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/tag/v6.8.0)
+   or the pinned submodule's `dist` folder. Approve the extension in macOS
+   settings. Activate it with the driver's manager:
+
+   ```sh copy Copy KMonad Driver Activation
+   /Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
+   ```
+
+   In a separate terminal, start the daemon in the foreground:
+
+   ```sh copy Copy KMonad Driver Daemon
+   sudo '/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon'
+   ```
+
+   Keep that terminal open. Do not add a startup job for the first test.
+   Do not use force activation or disable SIP to work around an existing driver.
+4. Grant **Input Monitoring** to the responsible application/terminal under
+   **System Settings > Privacy & Security**, as the KMonad guide requires.
+   Root is also required for capture and the virtual HID daemon. Follow any
+   specific macOS permission prompt, but do not treat Accessibility as a verified
+   KMonad prerequisite: its pinned guide names Input Monitoring, not Accessibility.
+5. Copy the Graphite example to a stable path and switch only its `defcfg` pair
+   to `(iokit-name)` and `(kext)`. With no name, input covers all keyboards.
+   To restrict capture, use `(iokit-name "exact product string")`; in the source
+   directory `c_src/mac`, `make` then `./list-keyboards` lists product strings.
+   Identical names can match more than one device. Keep a mouse for recovery.
+6. In the folder with your edited config, check it before starting:
+
+   ```sh copy Copy KMonad Mac Check
+   ~/.local/bin/kmonad ./graphite-kmonad.kbd --dry-run
+   ```
+
+   Then select U.S. input and run in the foreground:
+
+   ```sh copy Copy KMonad Mac Start
+   sudo ~/.local/bin/kmonad ./graphite-kmonad.kbd
+   ```
+
+   The daemon must already be running. Run the acceptance tests below before
+   using this setup daily. A successful dry run does not test permissions or I/O.
+
+### Disable, remove, or roll back KMonad
+
+With the mouse, end `kmonad.exe` in Task Manager or `kmonad` in Activity Monitor
+(administrator permission may be needed on macOS). Alternatively, use Control-C
+in its foreground terminal: physical Control plus `v` under this Graphite map.
+Do **not** assume Kanata's emergency chord works in KMonad. Release all keys and
+confirm US/QWERTY input. If a modifier stays down, press and release it after
+stopping the tool. Keep the remapper off if input is still unsafe.
+
+This recipe adds no startup job. If you added a task, service, or LaunchDaemon,
+disable only that job first so it cannot restart KMonad. To roll back a config,
+restore its backup, run `--dry-run`, then restart. To remove KMonad, stop it and
+remove only its binary/config; keep the source checkout if you still need it.
+Windows hooks need no driver removal. On macOS, stop the standalone daemon if
+you started it and no other client needs it. For full standalone driver removal,
+use the [6.8.0 uninstaller](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/tree/v6.8.0#uninstallation),
+but **not** if another app uses it. Never delete shared driver files manually.
+Revoke unused privacy grants only after stopping the process. This guide does
+not modify your OS input sources; choose your saved source if you changed it.
+
 ## Karabiner-Elements 16.3.0: macOS only
 
 Example: [`configs/graphite-karabiner.json`](configs/graphite-karabiner.json).
@@ -215,6 +366,8 @@ tool and repeat a short US typing test before you enable daily use.
 | Wrong letters or symbols | Select US/U.S., not native Graphite. Stop other remappers and check firmware. |
 | Karabiner JSON saves but does not remap | Check the active profile, rule order, Devices, permissions, and virtual keyboard type. |
 | Kanata macOS has connection/grab errors | Check root, matching driver, approved extension, running daemon, and privacy grants. Stop other tools that grab the device. |
+| KMonad reports a wrong-platform backend | Keep only the Windows or Mac input/output pair active in `defcfg`; `(kext)` is also the correct token for the Mac dext build. |
+| KMonad macOS has connection/grab errors | Check the dext build, driver 6.8.0, daemon, root, Input Monitoring, and exact product string if used. Do not substitute Kanata's driver. |
 | Windows remaps in one app only | Check app elevation and competing hooks. Secure screens and some OS shortcuts cannot be remapped normally. Do not add Interception as an automatic workaround. |
 | Modifier stuck or typing unsafe | Release keys, stop the remapper with its exit method, and test US input. Do not leave a failing configuration enabled. |
 | Login, unlock, remote desktop, or VM differs | Treat these as separate untested input paths. Keep recovery input available; do not change login defaults based on editor tests. |
@@ -226,6 +379,26 @@ README's full ASCII diagram: 47 keys with no Shift, left Shift, right Shift, or
 both Shifts (188 static cases per example). Modifier-retention settings were
 inspected; shortcut delivery was not tested.
 These checks do **not** run the Windows/macOS input backends or Karabiner's parser.
+
+**KMonad checks in the Linux orb:** The release 0.4.5 Linux asset reports
+`0.4.5.1, commit 6cd00b30de63218241dadb0906ebc655513cd09a`. Its SHA-256 matches
+the release asset digest. Its real `--dry-run` parser accepts the shared mapping
+with both Windows and Mac config text after harmless Linux I/O overrides.
+This is a parser/join check, not native Windows/Mac backend validation. For example:
+
+```sh
+kmonad configs/graphite-kmonad.kbd --dry-run \
+  --input 'device-file "/dev/input/graphite-validation-not-opened"' \
+  --output 'uinput-sink "graphite-validation"'
+```
+
+Dry run does not open that device or create the output. Static checks against the
+README ASCII diagram cover 47 keys in four Shift states (188 cases), plus 752
+cases across both Shift press orders and both release orders. Negative controls
+reject a wrong punctuation map and a shared Shift layer. Invalid config is
+rejected by the real parser.
+The source tag's backend tokens, layer semantics, and pinned driver were inspected.
+No native Windows/Mac build, parser run, or input event test was performed.
 
 **Not tested:** OS installation, driver activation, privacy prompts, device event
 delivery, timing, Caps Lock interactions, app shortcuts, secure/login screens,
@@ -241,5 +414,11 @@ device. A parser pass is not a runtime compatibility or safety guarantee.
 - [Karabiner: add your own rule](https://karabiner-elements.pqrs.org/docs/manual/configuration/add-your-own-complex-modifications/),
   [modifier semantics](https://karabiner-elements.pqrs.org/docs/json/complex-modifications-manipulator-definition/from/modifiers/),
   [rule priority](https://karabiner-elements.pqrs.org/docs/json/complex-modifications-manipulator-evaluation-priority/)
-- [KMonad installation and platform backends](https://github.com/kmonad/kmonad/blob/master/doc/installation.md)
+- [KMonad 0.4.5 release and driver update](https://github.com/kmonad/kmonad/releases/tag/0.4.5)
+- [KMonad pinned installation/build guide](https://github.com/kmonad/kmonad/blob/0.4.5/doc/installation.md)
+  (its old driver version and security-bypass advice are not used here)
+- [KMonad backend tokens, modifiers, and layer tutorial](https://github.com/kmonad/kmonad/blob/0.4.5/keymap/tutorial.kbd),
+  [layer stack semantics](https://github.com/kmonad/kmonad/blob/0.4.5/src/KMonad/Util/LayerStack.hs),
+  [pinned Mac driver](https://github.com/kmonad/kmonad/tree/0.4.5/c_src/mac)
+- [VirtualHIDDevice 6.8.0 support, activation, daemon, and uninstaller](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/tree/v6.8.0)
 - [AutoHotkey platform and license](https://www.autohotkey.com/)
